@@ -73,6 +73,8 @@ async fn main() -> Result<(), io::Error> {
         ])
         .output();
 
+    println!("Zip written to {filepath}");
+
     output.map_err(|err| {
         println!("Zip failed with the following error {err}");
         println!("Cleaning files and exiting");
@@ -131,19 +133,3 @@ struct Config {
     aws_s3_region: String
 
 }
-
-
-/*
-enum EnvVars {
-    AWS_ACCESS_KEY = "AWS_ACCESS_KEY_ID", 
-    AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY",
-    AWS_S3_REGION = "AWS_S3_REGION",
-    AWS_S3_ENDPOINT = "AWS_S3_ENDPOINT",
-    AWS_S3_BUCKET = "AWS_S3_BUCKET",
-    DATABASE_URL = "DATABASE_URL",
-}
-
-impl EnvVars {
-    
-}
-    */

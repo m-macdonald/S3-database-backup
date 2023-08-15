@@ -32,7 +32,7 @@
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
           src = craneLib.cleanCargoSource ./.;
           nativeBuildInputs = with pkgs; [ rustToolchain rust-analyzer pkg-config ];
-          buildInputs = with pkgs; [ openssl ];
+          buildInputs = with pkgs; [ ];
           commonArgs = {
             inherit src buildInputs nativeBuildInputs;
           };
@@ -41,10 +41,13 @@
             inherit cargoArtifacts;
           });
           dockerImage = pkgs.dockerTools.buildImage {
-            name = "";
+            name = "database-backup";
             tag = "latest";
-            copyToRoot = [ bin ];
+            # fromImage = "alpine";
+            # fromImageTag = "3.18";
+            copyToRoot = [ bin pkgs.postgresql_13 pkgs.gnutar pkgs.coreutils pkgs.bash ];
             config = {
+              Env = ["PATH=/bin/"];
               cmd = [ "${bin}/bin/database-backup" ];
             };
           };
@@ -56,7 +59,7 @@
           };
           packages = {
             inherit bin dockerImage;
-            default = bin;
+            default = dockerImage;
           };
         }
       );
