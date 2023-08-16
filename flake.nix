@@ -40,14 +40,29 @@
           bin = craneLib.buildPackage (commonArgs // {
             inherit cargoArtifacts;
           });
+          packages = [ bin pkgs.postgresql_14 pkgs.gnutar pkgs.gzip pkgs.cacert ];
+          devPackages = packages ++ [ pkgs.coreutils pkgs.bash ];
           dockerImage = pkgs.dockerTools.buildImage {
             name = "database-backup";
             tag = "latest";
-            # fromImage = "alpine";
-            # fromImageTag = "3.18";
-            copyToRoot = [ bin pkgs.postgresql_13 pkgs.gnutar pkgs.coreutils pkgs.bash ];
+            copyToRoot = packages;
+            runAsRoot = ''
+              mkdir /tmp
+            '';
             config = {
-              Env = ["PATH=/bin/"];
+              Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
+              cmd = [ "${bin}/bin/database-backup" ];
+            };
+          };
+          devImage = pkgs.dockerTools.buildImage {
+            name = "database-backup";
+            tag = "dev";
+            copyToRoot = devPackages;
+            runAsRoot = ''
+              mkdir /tmp
+            '';
+            config = {
+              Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
               cmd = [ "${bin}/bin/database-backup" ];
             };
           };
@@ -58,8 +73,8 @@
             inputsFrom = [ bin ];
           };
           packages = {
-            inherit bin dockerImage;
-            default = dockerImage;
+            inherit bin dockerImage devImage;
+            default = devImage;
           };
         }
       );

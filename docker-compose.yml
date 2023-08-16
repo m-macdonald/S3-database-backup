@@ -1,8 +1,5 @@
 services:
   database-backup:
-    image: "database-backup:latest"
+    image: "database-backup:dev"
     env_file: ".env"
-    command: ["bash"]
-    #stop_signal: SIGINT
-    stdin_open: true
-    tty: true
+    stop_signal: SIGINT

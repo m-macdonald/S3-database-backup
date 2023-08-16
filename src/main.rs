@@ -4,32 +4,14 @@ use std::{
 };
 use aws_config::meta::{region::RegionProviderChain};
 use aws_sdk_s3::{config::Region, primitives::ByteStream, Client};
-use dotenvy;
 use url::Url;
 use envconfig::Envconfig;
 use chrono::prelude::Utc;
 
 #[tokio::main]
 async fn main() -> Result<(), io::Error> {
-    dotenvy::dotenv();
     let config = Config::init_from_env().unwrap();
-/*
-    let env_keys = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_S3_REGION", "AWS_S3_ENDPOINT", "AWS_S3_BUCKET", "DATABASE_URL"];
 
-
-    let (env_vars, errors): (HashMap<&str, String>, HashMap<&str, dotenvy::Error>) = env_keys
-        .into_iter()
-        .partition_map(|env_key| { 
-            match dotenvy::var(env_key) {
-                Ok(env_var) => Either::Left((env_key, env_var)),
-                Err(err) => Either::Right((env_key, err))
-            }
-        });
-
-    if !errors.is_empty() {
-        panic!("The following environment variables could not be processed successfully:\n{:}", errors.into_keys().into_iter().format("\n"))
-    }
-    */
     let url = &config.database_url;
     let url = Url::parse(url)
         .expect("Failed to parse the provided database url");
@@ -50,17 +32,24 @@ async fn main() -> Result<(), io::Error> {
     let filepath_dump = format!("{filepath}.dump");
 
     println!("Backup beginning on {db_name}...");
-
-    Command::new("pg_dump")
+    let output = Command::new("pg_dump")
         .args([
+            "-d",
             url.as_str(),
             "-F",
             "c",
-            ">",
+            "-f",
             &filepath_dump
         ])
         .output()
         .expect("pg_dump failed");
+    
+    if output.stderr.last().is_some() {
+        match String::from_utf8(output.stderr) {
+            Ok(err) => panic!("{err}"),
+            Err(err) => panic!("Failed to process stderr from pg_dump: {err}")
+        }
+    }
 
     println!("Database dump successful");
 
@@ -72,9 +61,9 @@ async fn main() -> Result<(), io::Error> {
             &filepath_dump
         ])
         .output();
-
-    println!("Zip written to {filepath}");
-
+    // TODO : Need to handle stderr as done above for pg_dump since many errors don't seem to be
+    // translating to Rust Results
+    // TODO : I'm sure there's a better way of handling this error
     output.map_err(|err| {
         println!("Zip failed with the following error {err}");
         println!("Cleaning files and exiting");
@@ -85,7 +74,6 @@ async fn main() -> Result<(), io::Error> {
         exit(1);
     }).unwrap();
 
-    // TODO : Read in zip file
     let file_stream = ByteStream::from_path(Path::new(&filepath))
         .await
         .expect("Failed to read file bytestream");
@@ -94,7 +82,7 @@ async fn main() -> Result<(), io::Error> {
 
     let region_provider = RegionProviderChain::first_try(s3_region)
         .or_default_provider();
-    
+
     let shared_config = aws_config::from_env()
         .region(region_provider)
         .load()
