@@ -10,4 +10,5 @@ jobs:
     - uses: cachix/install-nix-action@v22
       with:
         nix_path: nixpkgs=channel:nixos-23.05
+        extra_nix_config: "system-features = big-parallel kvm"
     - run: nix build .#dockerImage
