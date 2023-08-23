@@ -1,6 +1,6 @@
 services:
   database-backup:
-    image: "database-backup:dev"
+    image: "s3-postgres-backup:dev"
     env_file: ".env"
     command: ["bash"]
     stdin_open: true

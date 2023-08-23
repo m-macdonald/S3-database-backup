@@ -44,6 +44,11 @@ async fn main() -> Result<(), io::Error> {
         .output()
         .expect("pg_dump failed");
     
+    match String::from_utf8(output.stdout) {
+        Ok(err) => println!("{err}"),
+        Err(err) => println!("Failed to process stdout from pg_dump: {err}")
+    }
+
     if output.stderr.last().is_some() {
         match String::from_utf8(output.stderr) {
             Ok(err) => panic!("{err}"),
