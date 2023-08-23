@@ -587,19 +587,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "database-backup"
-version = "0.1.0"
-dependencies = [
- "aws-config",
- "aws-sdk-s3",
- "chrono",
- "dotenvy",
- "envconfig",
- "tokio",
- "url",
-]
-
-[[package]]
 name = "deranged"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -615,12 +602,6 @@ dependencies = [
  "crypto-common",
  "subtle",
 ]
-
-[[package]]
-name = "dotenvy"
-version = "0.15.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "either"
@@ -1229,6 +1210,18 @@ name = "ryu"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+
+[[package]]
+name = "s3-postgres-backup"
+version = "0.1.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-s3",
+ "chrono",
+ "envconfig",
+ "tokio",
+ "url",
+]
 
 [[package]]
 name = "schannel"

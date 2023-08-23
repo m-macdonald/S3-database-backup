@@ -22,7 +22,7 @@
   outputs = { self, nixpkgs, flake-utils, rust-overlay, crane }:
     flake-utils.lib.eachDefaultSystem
       (system:
-        let
+      let
           overlays = [ (import rust-overlay) ];
           pkgs = import nixpkgs {
             inherit system overlays;
@@ -43,7 +43,7 @@
           packages = [ bin pkgs.postgresql_14 pkgs.gnutar pkgs.gzip pkgs.cacert ];
           devPackages = packages ++ [ pkgs.coreutils pkgs.bash ];
           dockerImage = pkgs.dockerTools.buildImage {
-            name = "database-backup";
+            name = "s3-postgres-backup";
             tag = "latest";
             copyToRoot = packages;
             runAsRoot = ''
@@ -51,11 +51,12 @@
             '';
             config = {
               Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
-              cmd = [ "${bin}/bin/database-backup" ];
+              Cmd = [ "${bin}/bin/s3-postgres-backup" ];
             };
           };
+          # Might be able to use pkgs.dockerTools.mergeImages [] to avoid repeating myself here
           devImage = pkgs.dockerTools.buildImage {
-            name = "database-backup";
+            name = "s3-postgres-backup";
             tag = "dev";
             copyToRoot = devPackages;
             runAsRoot = ''
@@ -63,7 +64,7 @@
             '';
             config = {
               Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
-              cmd = [ "${bin}/bin/database-backup" ];
+              Cmd = [ "${bin}/bin/s3-postgres-backup" ];
             };
           };
         in

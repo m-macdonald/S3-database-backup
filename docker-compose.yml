@@ -2,4 +2,6 @@ services:
   database-backup:
     image: "database-backup:dev"
     env_file: ".env"
-    stop_signal: SIGINT
+    command: ["bash"]
+    stdin_open: true
+    tty: true
