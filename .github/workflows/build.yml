@@ -28,6 +28,6 @@ jobs:
     - name: Push Image to DockerHub
       run: |
         docker load < result
-        docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+        docker push ${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_IMAGE_NAME }}:latest
     
 
