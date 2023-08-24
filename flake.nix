@@ -40,31 +40,31 @@
           bin = craneLib.buildPackage (commonArgs // {
             inherit cargoArtifacts;
           });
-          packages = [ bin pkgs.postgresql_14 pkgs.gnutar pkgs.gzip pkgs.cacert ];
-          devPackages = packages ++ [ pkgs.coreutils pkgs.bash ];
-          dockerImage = pkgs.dockerTools.buildImage {
+          packages = with pkgs; [ bin postgresql_14 gnutar gzip dockerTools.caCertificates bash ];
+          devPackages = with pkgs; packages ++ [ coreutils ];
+          dockerImage = pkgs.dockerTools.buildLayeredImage {
             name = "s3-postgres-backup";
             tag = "latest";
-            copyToRoot = packages;
-            runAsRoot = ''
-              mkdir /tmp
+            contents = packages;
+            extraCommands = ''
+              mkdir tmp
             '';
             config = {
-              Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
-              Cmd = [ "${bin}/bin/s3-postgres-backup" ];
+              Env = [ "PATH=/bin" ];
+              Cmd = [ "s3-postgres-backup" ];
             };
           };
           # Might be able to use pkgs.dockerTools.mergeImages [] to avoid repeating myself here
-          devImage = pkgs.dockerTools.buildImage {
+          devImage = pkgs.dockerTools.buildLayeredImage {
             name = "s3-postgres-backup";
             tag = "dev";
-            copyToRoot = devPackages;
-            runAsRoot = ''
-              mkdir /tmp
+            contents = devPackages;
+            extraCommands = ''
+              mkdir tmp
             '';
             config = {
-              Env = [ "PATH=/bin" "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt" ];
-              Cmd = [ "${bin}/bin/s3-postgres-backup" ];
+              Env = [ "PATH=/bin" ];
+              Cmd = [ "s3-postgres-backup" ];
             };
           };
         in
