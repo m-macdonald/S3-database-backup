@@ -40,7 +40,7 @@
           bin = craneLib.buildPackage (commonArgs // {
             inherit cargoArtifacts;
           });
-          packages = with pkgs; [ bin postgresql_14 gnutar gzip dockerTools.caCertificates bash ];
+          packages = with pkgs; [ bin postgresql_16 gnutar gzip dockerTools.caCertificates bash ];
           devPackages = with pkgs; packages ++ [ coreutils ];
           dockerImage = pkgs.dockerTools.buildLayeredImage {
             name = "s3-postgres-backup";
