@@ -2,7 +2,7 @@ use std::{
     process::{Command, exit},
     io, fs, path::Path
 };
-use aws_config::meta::{region::RegionProviderChain};
+use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_s3::{config::Region, primitives::ByteStream, Client};
 use url::Url;
 use envconfig::Envconfig;
@@ -32,15 +32,26 @@ async fn main() -> Result<(), io::Error> {
     let filepath_dump = format!("{filepath}.dump");
 
     println!("Backup beginning on {db_name}...");
-    let output = Command::new("pg_dump")
-        .args([
+    let mut command_args = vec!(
             "-d",
             url.as_str(),
             "-F",
             "c",
             "-f",
-            &filepath_dump
-        ])
+            &filepath_dump,
+        );
+
+    match &config.database_schema_pattern {
+        Some(database_schema_pattern) => {
+            println!("The following schema pattern was provided and will be used: {database_schema_pattern}");
+            command_args.push("-n");
+            command_args.push(database_schema_pattern)
+        },
+        None => println!("No database schema pattern provided. All schemas will be dumped.")
+    }
+
+    let output = Command::new("pg_dump")
+        .args(command_args)
         .output()
         .expect("pg_dump failed");
     
@@ -116,6 +127,9 @@ struct Config {
     #[envconfig(from = "DATABASE_URL")]
     database_url: String,
 
+    #[envconfig(from = "DATABASE_SCHEMA_PATTERN")]
+    database_schema_pattern: Option<String>,
+
     #[envconfig(from = "AWS_S3_BUCKET")]
     aws_s3_bucket: String,
     
@@ -124,5 +138,4 @@ struct Config {
 
     #[envconfig(from = "AWS_S3_REGION")]
     aws_s3_region: String
-
 }

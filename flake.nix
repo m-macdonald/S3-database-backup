@@ -55,7 +55,7 @@
             };
           };
           # Might be able to use pkgs.dockerTools.mergeImages [] to avoid repeating myself here
-          devImage = pkgs.dockerTools.buildLayeredImage {
+          devImage = pkgs.dockerTools.streamLayeredImage {
             name = "s3-postgres-backup";
             tag = "dev";
             contents = devPackages;
